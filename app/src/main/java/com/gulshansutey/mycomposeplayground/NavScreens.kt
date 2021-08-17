@@ -32,11 +32,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gulshansutey.mycomposeplayground.components.chart.PieChart
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.pagerTabIndicatorOffset
+import com.google.accompanist.pager.rememberPagerState
 import com.gulshansutey.mycomposeplayground.components.chart.Pie
+import com.gulshansutey.mycomposeplayground.components.chart.PieChart
 import com.gulshansutey.mycomposeplayground.model.*
 import com.gulshansutey.mycomposeplayground.ui.theme.*
 import com.gulshansutey.mycomposeplayground.ultis.LogCompositions
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
@@ -99,7 +104,7 @@ fun HomeScreen(optionsList: List<BaseUiModel>, onClicks: ((OptionModel) -> Unit)
                     .fillMaxWidth()
             ) {
                 items(optionsList.filterIsInstance<OptionModel>()) {
-                    OptionItemView(it,onClicks)
+                    OptionItemView(it, onClicks)
                 }
             }
         }
@@ -260,3 +265,52 @@ fun RitualItemView(data: RitualModel) {
     }
 
 }
+
+@ExperimentalPagerApi
+@Composable
+fun TabViewPagerScreen() {
+    val tabData = listOf(
+        "India",
+        "America",
+        "Germany",
+        "Russia",
+    )
+    val pagerState = rememberPagerState(
+        pageCount = tabData.size,
+        initialOffscreenLimit = 2,
+        infiniteLoop = false,
+        initialPage = 0
+    )
+    val coroutineScope = rememberCoroutineScope()
+    val currentPage = pagerState.currentPage
+    Column {
+        TabRow(selectedTabIndex = currentPage,
+            indicator = { tabPositions ->
+                TabRowDefaults.Indicator(
+                    Modifier.pagerTabIndicatorOffset(pagerState = pagerState, tabPositions),
+                    height = 2.5.dp,
+                    color = Color.White,
+                )
+            }
+        ) {
+            tabData.forEachIndexed { index, tab ->
+                Tab(
+                    selected = currentPage == index,
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                    text = { Text(text = tab) },
+                    selectedContentColor = Color.White,
+                    unselectedContentColor = Color.LightGray
+                )
+            }
+        }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .weight(1f)
+                .padding(10.dp)
+        ) { index ->
+            BasicScreen(tabData[index])
+        }
+    }
+}
+

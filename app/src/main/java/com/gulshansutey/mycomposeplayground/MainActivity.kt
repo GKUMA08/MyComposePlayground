@@ -15,11 +15,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.gson.Gson
 import com.gulshansutey.mycomposeplayground.model.OptionModel
 import com.gulshansutey.mycomposeplayground.viewmodel.HomeScreenViewModel
 import com.gulshansutey.mycomposeplayground.viewmodel.ThemeListViewModel
 
+@ExperimentalPagerApi
 @ExperimentalFoundationApi
 class MainActivity : ComponentActivity() {
 
@@ -40,6 +42,7 @@ val items = listOf(
     NavItems.Theme
 )
 
+@ExperimentalPagerApi
 @Preview
 @ExperimentalFoundationApi
 @Composable
@@ -51,6 +54,7 @@ fun ContentView() {
     }
 }
 
+@ExperimentalPagerApi
 @ExperimentalFoundationApi
 @Composable
 fun MainScreen(viewModel: ThemeListViewModel, homeViewModel: HomeScreenViewModel) {
@@ -106,6 +110,7 @@ fun CreateBottomNav(navController: NavHostController) {
     }
 }
 
+@ExperimentalPagerApi
 @ExperimentalFoundationApi
 @Composable
 fun ScreenNavigation(
@@ -139,7 +144,7 @@ fun ScreenNavigation(
             }
 
             composable(NavItems.Anchor.path) {
-                BasicScreen(centerTitle = item.title)
+                TabViewPagerScreen()
             }
             composable(NavItems.Bag.path) {
                 BasicScreen(centerTitle = item.title)
