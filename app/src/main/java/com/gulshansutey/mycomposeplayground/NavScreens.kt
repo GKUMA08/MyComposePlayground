@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberImagePainter
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
@@ -41,24 +43,49 @@ import com.gulshansutey.mycomposeplayground.components.chart.PieChart
 import com.gulshansutey.mycomposeplayground.model.*
 import com.gulshansutey.mycomposeplayground.ui.theme.*
 import com.gulshansutey.mycomposeplayground.ultis.LogCompositions
+import com.gulshansutey.mycomposeplayground.viewmodel.NewsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun BasicScreen(centerTitle: String) {
+fun BasicScreen(centerTitle: String, news: NewsResponseModel? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .wrapContentSize(Alignment.Center)
     ) {
-        Text(
-            text = centerTitle,
-            fontWeight = FontWeight.Bold,
-            color = colorResource(id = R.color.color_primary),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            textAlign = TextAlign.Center,
-            fontSize = 25.sp
-        )
+        news?.articles?.let {
+            LazyColumn(
+                modifier = Modifier
+                    .wrapContentSize(Alignment.Center)
+                    .fillMaxSize()
+            ) {
+                item {
+                    Text(
+                        text = centerTitle,
+                        fontWeight = FontWeight.Bold,
+                        color = colorResource(id = R.color.color_primary),
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        textAlign = TextAlign.Center,
+                        fontSize = 25.sp
+                    )
+                }
+                items(it) { item ->
+                    NewsItemView(item)
+                }
+            }
+        } ?: kotlin.run {
+            Text(
+                text = centerTitle,
+                fontWeight = FontWeight.Bold,
+                color = colorResource(id = R.color.color_primary),
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                textAlign = TextAlign.Center,
+                fontSize = 25.sp
+            )
+        }
+
+
     }
 }
 
@@ -205,6 +232,44 @@ fun HeaderItemView(title: String) {
 }
 
 @Composable
+fun NewsItemView(news: News) {
+    Card(
+        elevation = 8.dp,
+        modifier = Modifier.padding(8.dp),
+        shape = RoundedCornerShape(6.dp),
+    ) {
+        Column {
+            Image(
+                painter = rememberImagePainter(news.urlToImage),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            )
+
+            Text(
+                text = news.title,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Left,
+                fontSize = 14.sp, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+            )
+            Text(
+                text = news.content,
+                fontWeight = FontWeight.Light,
+                textAlign = TextAlign.Left,
+                fontSize = 12.sp, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+            )
+        }
+    }
+
+}
+
+@Composable
 fun OptionItemView(option: OptionModel, onClicks: ((OptionModel) -> Unit)? = null) {
     Card(
         elevation = 8.dp,
@@ -268,7 +333,7 @@ fun RitualItemView(data: RitualModel) {
 
 @ExperimentalPagerApi
 @Composable
-fun TabViewPagerScreen() {
+fun TabViewPagerScreen(newsViewModel: NewsViewModel?) {
     val tabData = listOf(
         "India",
         "America",
@@ -282,9 +347,14 @@ fun TabViewPagerScreen() {
         initialPage = 0
     )
     val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(newsViewModel) {
+        coroutineScope.launch { newsViewModel?.getLatestItNews() }
+    }
+
     val currentPage = pagerState.currentPage
     Column {
-        TabRow(selectedTabIndex = currentPage,
+        TabRow(
+            selectedTabIndex = currentPage,
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
                     Modifier.pagerTabIndicatorOffset(pagerState = pagerState, tabPositions),
@@ -309,7 +379,7 @@ fun TabViewPagerScreen() {
                 .weight(1f)
                 .padding(10.dp)
         ) { index ->
-            BasicScreen(tabData[index])
+            BasicScreen(tabData[index], newsViewModel?.lastNewsState)
         }
     }
 }

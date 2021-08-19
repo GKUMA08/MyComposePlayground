@@ -3,6 +3,7 @@ package com.gulshansutey.mycomposeplayground
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -10,7 +11,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -19,19 +19,21 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.gson.Gson
 import com.gulshansutey.mycomposeplayground.model.OptionModel
 import com.gulshansutey.mycomposeplayground.viewmodel.HomeScreenViewModel
+import com.gulshansutey.mycomposeplayground.viewmodel.NewsViewModel
 import com.gulshansutey.mycomposeplayground.viewmodel.ThemeListViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 @ExperimentalPagerApi
 @ExperimentalFoundationApi
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
+    private val newsViewModel: NewsViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ContentView()
+            ContentView(newsViewModel)
         }
     }
-
 }
 
 val items = listOf(
@@ -43,24 +45,28 @@ val items = listOf(
 )
 
 @ExperimentalPagerApi
-@Preview
 @ExperimentalFoundationApi
 @Composable
-fun ContentView() {
+fun ContentView(newsViewModel: NewsViewModel) {
+
     val viewModel = ThemeListViewModel()
     val homeViewModel = HomeScreenViewModel()
     viewModel.MyAppTheme {
-        MainScreen(viewModel, homeViewModel)
+        MainScreen(viewModel, homeViewModel, newsViewModel)
     }
 }
 
 @ExperimentalPagerApi
 @ExperimentalFoundationApi
 @Composable
-fun MainScreen(viewModel: ThemeListViewModel, homeViewModel: HomeScreenViewModel) {
+fun MainScreen(
+    viewModel: ThemeListViewModel,
+    homeViewModel: HomeScreenViewModel,
+    newsViewModel: NewsViewModel
+) {
     val navController = rememberNavController()
     Scaffold(topBar = { CreateToolbar() }, bottomBar = { CreateBottomNav(navController) }) {
-        ScreenNavigation(navController, viewModel, homeViewModel)
+        ScreenNavigation(navController, viewModel, homeViewModel, newsViewModel)
     }
 }
 
@@ -116,7 +122,8 @@ fun CreateBottomNav(navController: NavHostController) {
 fun ScreenNavigation(
     navHostController: NavHostController,
     viewModel: ThemeListViewModel,
-    homeViewModel: HomeScreenViewModel
+    homeViewModel: HomeScreenViewModel,
+    newsViewModel: NewsViewModel
 ) {
     NavHost(navController = navHostController, startDestination = NavItems.Home.path) {
         items.forEach { item ->
@@ -144,13 +151,13 @@ fun ScreenNavigation(
             }
 
             composable(NavItems.Anchor.path) {
-                TabViewPagerScreen()
+                TabViewPagerScreen(newsViewModel)
             }
             composable(NavItems.Bag.path) {
-                BasicScreen(centerTitle = item.title)
+                BasicScreen(centerTitle = item.title, null)
             }
             composable(NavItems.Data.path) {
-                BasicScreen(centerTitle = item.title)
+                BasicScreen(centerTitle = item.title, null)
             }
         }
     }
